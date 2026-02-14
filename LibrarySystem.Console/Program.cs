@@ -151,9 +151,11 @@ namespace LibrarySystem.Console
         {
             System.Console.WriteLine("\n=== Alla medlemmar ===\n");
 
-            // OBS: Du behöver lägga till en metod i Library för att hämta alla medlemmar
-            // Här är en tillfällig lösning tills du lägger till den metoden
-            System.Console.WriteLine("Funktionen kommer snart...");
+            var members = _library.GetAllMembers();
+            foreach (var member in members)
+            {
+                System.Console.WriteLine(member.GetMemberInfo());
+            }
         }
 
         static void ShowStatistics()
