@@ -1,0 +1,62 @@
+﻿@page "/loans"
+@using LibarySystem.Core
+@using LibrarySystem.Web.Services
+@inject LoanService LoanService
+
+<PageTitle>Bibliotekssystem - Lån</PageTitle>
+
+<h1>Aktiva lån</h1>
+
+@if (activeLoans == null)
+{
+    <p>Laddar...</p>
+}
+else if (!activeLoans.Any())
+{
+    <p>Inga aktiva lån just nu.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Bok</th>
+                <th>Låntagare</th>
+                <th>Lånedatum</th>
+                <th>Återlämnas senast</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var loan in activeLoans)
+            {
+                var isOverdue = loan.DueDate < DateTime.Now;
+                <tr class="@(isOverdue ? "table-danger" : "")">
+                    <td>@loan.Book.Title</td>
+                    <td>@loan.Member.Name</td>
+                    <td>@loan.LoanDate.ToString("yyyy-MM-dd")</td>
+                    <td>@loan.DueDate.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @if (isOverdue)
+                        {
+                            <span class="badge bg-danger">Försenad</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning">Pågående</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Loan>? activeLoans;
+
+    protected override async Task OnInitializedAsync()
+    {
+        activeLoans = await LoanService.GetActiveLoansAsync();
+    }
+}

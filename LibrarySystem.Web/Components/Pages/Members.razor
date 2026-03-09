@@ -1,0 +1,61 @@
+﻿@page "/members"
+@using LibarySystem.Core
+@using LibrarySystem.Web.Services
+@inject MemberService MemberService
+
+<PageTitle>Bibliotekssystem - Medlemmar</PageTitle>
+
+<h1>Medlemmar</h1>
+<div class="row mb-3">
+    <div class="col-md-12 text-end">
+        <a href="/members/add" class="btn btn-success">+ Registrera ny medlem</a>
+    </div>
+</div>
+
+@if (members == null)
+{
+    <p>Laddar...</p>
+}
+else if (!members.Any())
+{
+    <p>Inga medlemmar registrerade.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Medlems-ID</th>
+                <th>Namn</th>
+                <th>Email</th>
+                <th>Medlem sedan</th>
+                <th>Aktiva lån</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var member in members)
+            {
+                <tr>
+                    <td>@member.MemberId</td>
+                    <td>@member.Name</td>
+                    <td>@member.Email</td>
+                    <td>@member.MemberSince.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        <span class="badge @(member.GetActiveLoansCount() > 0 ? "bg-warning" : "bg-secondary")">
+                            @member.GetActiveLoansCount()
+                        </span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Member>? members;
+
+    protected override async Task OnInitializedAsync()
+    {
+        members = await MemberService.GetAllMembersAsync();
+    }
+}

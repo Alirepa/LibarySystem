@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LibarySystem.Core\LibarySystem.Core.csproj" />
+    <ProjectReference Include="..\LibrarySystem.Data\LibrarySystem.Data.csproj" />
   </ItemGroup>
 
   <ItemGroup>

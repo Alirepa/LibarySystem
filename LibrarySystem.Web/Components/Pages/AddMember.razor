@@ -1,0 +1,84 @@
+﻿@page "/members/add"
+@using LibarySystem.Core
+@using LibarySystem.Core.ViewModels
+@using LibrarySystem.Web.Services
+@inject MemberService MemberService
+@inject NavigationManager Navigation
+
+<PageTitle>Registrera ny medlem</PageTitle>
+
+<h1>Registrera ny medlem</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Medlemsinformation</h5>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger">@errorMessage</div>
+                }
+
+                <EditForm Model="@memberModel" OnValidSubmit="@HandleValidSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="alert alert-danger" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="memberId">Medlems-ID</label>
+                        <InputText id="memberId" class="form-control" @bind-Value="memberModel.MemberId" />
+                        <ValidationMessage For="@(() => memberModel.MemberId)" class="text-danger" />
+                        <small class="form-text text-muted">Ange ett unikt ID, t.ex. M004</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="name">Namn</label>
+                        <InputText id="name" class="form-control" @bind-Value="memberModel.Name" />
+                        <ValidationMessage For="@(() => memberModel.Name)" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="email">E-post</label>
+                        <InputText id="email" class="form-control" @bind-Value="memberModel.Email" />
+                        <ValidationMessage For="@(() => memberModel.Email)" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Registrera medlem</button>
+                        <a href="/members" class="btn btn-secondary">Avbryt</a>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private MemberViewModel memberModel = new();
+    private string? errorMessage;
+
+    private async Task HandleValidSubmit()
+    {
+        errorMessage = null;
+
+        try
+        {
+            // Kontrollera om medlems-ID redan finns
+            var existingMember = await MemberService.GetMemberByMemberIdAsync(memberModel.MemberId);
+            if (existingMember != null)
+            {
+                errorMessage = "Detta medlems-ID används redan. Välj ett annat.";
+                return;
+            }
+
+            var member = new Member(memberModel.MemberId, memberModel.Name, memberModel.Email);
+            await MemberService.AddMemberAsync(member);
+            Navigation.NavigateTo("/members");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Ett fel uppstod: {ex.Message}";
+        }
+    }
+}

@@ -1,0 +1,81 @@
+﻿@page "/books/add"
+@using LibarySystem.Core
+@using LibarySystem.Core.ViewModels
+@using LibrarySystem.Web.Services
+@inject BookService BookService
+@inject NavigationManager Navigation
+
+<PageTitle>Lägg till ny bok</PageTitle>
+
+<h1>Lägg till ny bok</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Bokinformation</h5>
+            </div>
+            <div class="card-body">
+                <EditForm Model="@bookModel" OnValidSubmit="@HandleValidSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="alert alert-danger" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="isbn">ISBN</label>
+                        <InputText id="isbn" class="form-control" @bind-Value="bookModel.ISBN" />
+                        <ValidationMessage For="@(() => bookModel.ISBN)" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="title">Titel</label>
+                        <InputText id="title" class="form-control" @bind-Value="bookModel.Title" />
+                        <ValidationMessage For="@(() => bookModel.Title)" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="author">Författare</label>
+                        <InputText id="author" class="form-control" @bind-Value="bookModel.Author" />
+                        <ValidationMessage For="@(() => bookModel.Author)" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="publishedYear">Publiceringsår</label>
+                        <InputNumber id="publishedYear" class="form-control" @bind-Value="bookModel.PublishedYear" />
+                        <ValidationMessage For="@(() => bookModel.PublishedYear)" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Spara bok</button>
+                        <a href="/books" class="btn btn-secondary">Avbryt</a>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private BookViewModel bookModel = new();
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            var book = new Book
+            {
+                ISBN = bookModel.ISBN,
+                Title = bookModel.Title,
+                Author = bookModel.Author,
+                PublishedYear = bookModel.PublishedYear,
+                IsAvailable = true
+            };
+
+            await BookService.AddBookAsync(book);
+            Navigation.NavigateTo("/books");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fel vid sparande: {ex.Message}");
+        }
+    }
+}

@@ -1,0 +1,173 @@
+﻿@page "/books"
+@using LibarySystem.Core
+@using LibrarySystem.Web.Services
+@inject BookService BookService
+@inject NavigationManager Navigation
+
+<PageTitle>Bibliotekssystem - Böcker</PageTitle>
+
+<h1>Böcker</h1>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="Sök på titel, författare eller ISBN" @bind="searchTerm" />
+            <button class="btn btn-primary" @onclick="Search">Sök</button>
+            <button class="btn btn-secondary" @onclick="ClearSearch">Visa alla</button>
+        </div>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="/books/add" class="btn btn-success">+ Lägg till bok</a>
+    </div>
+</div>
+
+@if (books == null)
+{
+    <p>Laddar böcker...</p>
+}
+else if (books.Count == 0)
+{
+    <p>Inga böcker hittades.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th @onclick="SortByTitle">Titel @GetSortIcon("title")</th>
+                <th @onclick="SortByAuthor">Författare @GetSortIcon("author")</th>
+                <th @onclick="SortByYear">År @GetSortIcon("year")</th>
+                <th>ISBN</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in sortedBooks)
+            {
+                <tr>
+                    <td><a href="/books/@book.Id">@book.Title</a></td>
+                    <td>@book.Author</td>
+                    <td>@book.PublishedYear</td>
+                    <td>@book.ISBN</td>
+                    <td>
+                        @if (book.IsAvailable)
+                        {
+                            <span class="badge bg-success">Tillgänglig</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Utlånad</span>
+                        }
+                    </td>
+                    <td>
+                        <a href="/books/@book.Id" class="btn btn-sm btn-info">Detaljer</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Book>? books;
+    private string searchTerm = "";
+    private string sortColumn = "title";
+    private bool sortAscending = true;
+
+    private IEnumerable<Book> sortedBooks
+    {
+        get
+        {
+            if (books == null) return Enumerable.Empty<Book>();
+
+            if (sortColumn == "title")
+            {
+                return sortAscending ? books.OrderBy(b => b.Title) : books.OrderByDescending(b => b.Title);
+            }
+            else if (sortColumn == "author")
+            {
+                return sortAscending ? books.OrderBy(b => b.Author) : books.OrderByDescending(b => b.Author);
+            }
+            else if (sortColumn == "year")
+            {
+                return sortAscending ? books.OrderBy(b => b.PublishedYear) : books.OrderByDescending(b => b.PublishedYear);
+            }
+
+            return books.OrderBy(b => b.Title);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllBooks();
+    }
+
+    private async Task LoadAllBooks()
+    {
+        books = await BookService.GetAllBooksAsync();
+    }
+
+    private async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            await LoadAllBooks();
+        }
+        else
+        {
+            books = await BookService.SearchBooksAsync(searchTerm);
+        }
+    }
+
+    private async Task ClearSearch()
+    {
+        searchTerm = "";
+        await LoadAllBooks();
+    }
+
+    private void SortByTitle()
+    {
+        if (sortColumn == "title")
+        {
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            sortColumn = "title";
+            sortAscending = true;
+        }
+    }
+
+    private void SortByAuthor()
+    {
+        if (sortColumn == "author")
+        {
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            sortColumn = "author";
+            sortAscending = true;
+        }
+    }
+
+    private void SortByYear()
+    {
+        if (sortColumn == "year")
+        {
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            sortColumn = "year";
+            sortAscending = true;
+        }
+    }
+
+    private string GetSortIcon(string column)
+    {
+        if (sortColumn != column) return "↕️";
+        return sortAscending ? "↑" : "↓";
+    }
+}
